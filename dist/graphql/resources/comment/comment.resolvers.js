@@ -1,0 +1,48 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const utils_1 = require("../../../utils/utils");
+exports.commentResolvers = {
+    Comment: {
+        user: (parent, { first = 10, offset = 0 }, { db }, info) => {
+            return db.User.findById(parent.get("user")).catch(utils_1.handleError);
+        },
+        post: (parent, { first = 10, offset = 0 }, { db }, info) => {
+            return db.Post.findById(parent.get("post")).catch(utils_1.handleError);
+        },
+    },
+    Query: {
+        commentsByPost: (parent, { postId, first = 10, offset = 0 }, { db }, info) => {
+            postId = parseInt(postId);
+            return db.Comments.findAll({
+                where: { post: postId }
+            }).catch(utils_1.handleError);
+        }
+    },
+    Mutation: {
+        createComment: (parent, { input }, { db }, info) => {
+            return db.sequelize.transaction((t) => {
+                return db.Comments.create(input, { transaction: t });
+            }).catch(utils_1.handleError);
+        },
+        updateComment: (parent, { id, input }, { db }, info) => {
+            id = parseInt(id);
+            return db.sequelize.transaction((t) => {
+                return db.Comments.findById(id).then((comment) => {
+                    if (!id)
+                        throw new Error(`Comment with id ${id} not found!`);
+                    return comment.update(input, { transaction: t });
+                }).catch(utils_1.handleError);
+            });
+        },
+        deleteComment: (parent, { id, input }, { db }, info) => {
+            id = parseInt(id);
+            return db.sequelize.transaction((t) => {
+                return db.Comments.findById(id).then((comment) => {
+                    if (!id)
+                        throw new Error(`Comment with id ${id} not found!`);
+                    return comment.destroy({ transaction: t }).then(comment => !!comment);
+                });
+            }).catch(utils_1.handleError);
+        }
+    }
+};
