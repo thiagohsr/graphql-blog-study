@@ -27,8 +27,7 @@ if (!db) {
       const model = sequelize.import(path.join(__dirname, file))
       db[model["name"]] = model;
     });
-    console.log("=========================")
-    console.log("db: ", db)
+
     Object.keys(db).forEach((modelName: string) => {
       if(db[modelName].associate) {
         db[modelName].associate(db)
